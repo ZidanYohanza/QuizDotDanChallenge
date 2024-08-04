@@ -1,3 +1,4 @@
+// Quiz.jsx
 import React, { useState, useEffect } from 'react';
 import Question from './Question';
 import Result from './Result';
@@ -10,6 +11,7 @@ const Quiz = ({ onLogout }) => {
   const [timeLeft, setTimeLeft] = useState(120);
   const [isFinished, setIsFinished] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [answeredQuestions, setAnsweredQuestions] = useState(0); // State baru untuk melacak jumlah soal yang terjawab
 
   useEffect(() => {
     const loadQuestions = async () => {
@@ -21,6 +23,7 @@ const Quiz = ({ onLogout }) => {
           setScore(savedState.score);
           setTimeLeft(savedState.timeLeft);
           setIsFinished(savedState.isFinished);
+          setAnsweredQuestions(savedState.answeredQuestions || 0); // Memuat state soal yang terjawab
         } else {
           const data = await fetchQuestions();
           setQuestions(data);
@@ -44,10 +47,11 @@ const Quiz = ({ onLogout }) => {
         score,
         timeLeft,
         isFinished,
+        answeredQuestions, // Menyimpan state soal yang terjawab
       };
       localStorage.setItem('quizState', JSON.stringify(state));
     }
-  }, [questions, currentQuestionIndex, score, timeLeft, isFinished]);
+  }, [questions, currentQuestionIndex, score, timeLeft, isFinished, answeredQuestions]);
 
   useEffect(() => {
     if (timeLeft > 0 && !isFinished) {
@@ -62,6 +66,7 @@ const Quiz = ({ onLogout }) => {
     if (isCorrect) {
       setScore(score + 1);
     }
+    setAnsweredQuestions(answeredQuestions + 1); // Menambah jumlah soal yang terjawab
     const nextQuestionIndex = currentQuestionIndex + 1;
     if (nextQuestionIndex < questions.length) {
       setCurrentQuestionIndex(nextQuestionIndex);
@@ -81,7 +86,7 @@ const Quiz = ({ onLogout }) => {
   }
 
   if (isFinished) {
-    return <Result score={score} totalQuestions={questions.length} />;
+    return <Result score={score} totalQuestions={questions.length} answeredQuestions={answeredQuestions} />;
   }
 
   if (questions.length === 0) {
@@ -92,9 +97,13 @@ const Quiz = ({ onLogout }) => {
     <div className="bg-[url('/public/vbg.jpg')] min-h-screen flex flex-col">
       <header className="bg-white p-4 shadow-md">
         <div className="container mx-auto flex justify-between items-center">
-          <span>Soal yang sudah dikerjakan: {currentQuestionIndex}</span>
-          <span>Soal {currentQuestionIndex + 1} dari {questions.length}</span>
-          <span>{formatTimeLeft(timeLeft)}</span>
+          <button onClick={onLogout} className="bg-red-500 text-white py-2 px-4 rounded">Logout</button>
+          <div className="text-center">
+            <span>Soal {currentQuestionIndex + 1} dari {questions.length}</span>
+          </div>
+          <div>
+            <span>{formatTimeLeft(timeLeft)}</span>
+          </div>
         </div>
       </header>
       <main className="flex-grow flex items-center justify-center">
